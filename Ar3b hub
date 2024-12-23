@@ -1,0 +1,301 @@
+-- عرب هاب - سكربت طيران، زيادة سرعة، نط لا نهائي، عبور الجدران، نسخ الجوال والبيسي، اختفاء، تغيير لون السماء إلى أحمر، ومفتاح كلمة المرور
+-- ملاحظة: يجب على اللاعبين زيارة هذا الرابط في تليجرام للحصول على كلمة المرور
+-- الرابط: https://t.me/+N3NaOvXSApFiYzA0
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local mouse = player:GetMouse()
+
+-- متغيرات للطيران
+local flying = false
+local speed = 50 -- سرعة الطيران
+local bodyVelocity = nil
+local bodyGyro = nil
+
+-- إعداد القفز العالي
+local jumpPower = 200 -- قوة القفز (زيادة هذه القيمة تجعل القفز أعلى)
+
+-- إعداد زيادة السرعة
+local normalWalkSpeed = humanoid.WalkSpeed
+local increasedWalkSpeed = 100 -- السرعة الجديدة
+
+-- متغيرات لعبور الجدران
+local bypassWalls = true  -- إذا كان TRUE فسيتم تفعيل العبور عبر الجدران
+
+-- متغيرات للاختفاء
+local invisible = false
+
+-- متغيرات لتغيير السماء إلى اللون الأحمر
+local skyChanged = false
+
+-- متغيرات لكلمة المرور
+local correctPassword = "Saudi" -- كلمة المرور المطلوبة لفتح المكان
+local passwordEntered = false -- حالة دخول كلمة المرور
+
+-- وظيفة لبدء الطيران
+local function startFlying()
+    if not flying then
+        flying = true
+        -- إنشاء جسم للسرعة
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.Parent = character:WaitForChild("HumanoidRootPart")
+        
+        -- إنشاء جسم للتحكم في التوازن
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)
+        bodyGyro.CFrame = character.HumanoidRootPart.CFrame
+        bodyGyro.Parent = character:WaitForChild("HumanoidRootPart")
+        
+        -- وضع الشخصية في الهواء
+        humanoid.PlatformStand = true
+        print("تم تفعيل الطيران في سكربت عرب هاب!")
+    end
+end
+
+-- وظيفة لإيقاف الطيران
+local function stopFlying()
+    if flying then
+        flying = false
+        bodyVelocity:Destroy()
+        bodyGyro:Destroy()
+        humanoid.PlatformStand = false
+        print("تم إيقاف الطيران في سكربت عرب هاب!")
+    end
+end
+
+-- وظيفة لزيادة قوة القفز (نط لا نهائي)
+local function enableInfiniteJump()
+    humanoid.JumpPower = jumpPower
+    humanoid.UseJumpPower = true  -- تمكين القفز بقوة غير محدودة
+end
+
+-- وظيفة لإيقاف القفز اللانهائي
+local function disableInfiniteJump()
+    humanoid.JumpPower = 50  -- إعادة القيمة الافتراضية
+    humanoid.UseJumpPower = false
+end
+
+-- وظيفة لزيادة السرعة
+local function enableSpeedBoost()
+    humanoid.WalkSpeed = increasedWalkSpeed
+end
+
+-- وظيفة لإعادة السرعة إلى الطبيعي
+local function disableSpeedBoost()
+    humanoid.WalkSpeed = normalWalkSpeed
+end
+
+-- وظيفة لعبور الجدران
+local function bypassWallsFunction()
+    if bypassWalls then
+        -- يتم تعطيل خاصية CanCollide لجميع الأجزاء
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false  -- تعطيل الاصطدام
+            end
+        end
+    else
+        -- إعادة تفعيل الاصطدام بعد إيقاف عبور الجدران
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true  -- تفعيل الاصطدام
+            end
+        end
+    end
+end
+
+-- وظيفة لنسخ الجوال والبيسي
+local function copyObject(targetObject)
+    if targetObject and (targetObject.Name == "Phone" or targetObject.Name == "PC") then
+        local clonedObject = targetObject:Clone()
+        
+        -- نقل النسخة إلى مكان قريب منك
+        clonedObject.CFrame = character.HumanoidRootPart.CFrame + Vector3.new(5, 0, 0)  -- 5 وحدات إلى اليمين
+        clonedObject.Parent = game.Workspace
+        print("تم نسخ الكائن!")
+    end
+end
+
+-- وظيفة لاختفاء الشخصية
+local function toggleInvisibility()
+    invisible = not invisible
+    if invisible then
+        -- إخفاء الشخصية عن الأنظار
+        character:FindFirstChild("Head").Transparency = 1
+        character:FindFirstChild("Torso").Transparency = 1
+        character:FindFirstChild("HumanoidRootPart").Transparency = 1
+        -- إخفاء الأجزاء الأخرى (الأذرع والأرجل)
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 1
+                part.CanCollide = false  -- تعطيل الاصطدام
+            end
+        end
+        humanoid.Health = 0  -- إنهاء حياة الشخصية (اختفاءها فعليًا)
+        print("تم تفعيل الاختفاء!")
+    else
+        -- إعادة الشخصية للظهور
+        character:FindFirstChild("Head").Transparency = 0
+        character:FindFirstChild("Torso").Transparency = 0
+        character:FindFirstChild("HumanoidRootPart").Transparency = 0
+        -- إعادة الأجزاء الأخرى
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+                part.CanCollide = true  -- إعادة الاصطدام
+            end
+        end
+        humanoid.Health = 100  -- استرجاع حياة الشخصية
+        print("تم إيقاف الاختفاء!")
+    end
+end
+
+-- وظيفة لتغيير لون السماء إلى الأحمر
+local function toggleSkyColor()
+    if skyChanged then
+        -- إعادة السماء إلى اللون الطبيعي (الأزرق)
+        game.Lighting.Sky.SkyboxBk = "rbxassetid://132243517"
+        game.Lighting.Sky.SkyboxDn = "rbxassetid://132243517"
+        game.Lighting.Sky.SkyboxFt = "rbxassetid://132243517"
+        game.Lighting.Sky.SkyboxLf = "rbxassetid://132243517"
+        game.Lighting.Sky.SkyboxRt = "rbxassetid://132243517"
+        game.Lighting.Sky.SkyboxUp = "rbxassetid://132243517"
+        skyChanged = false
+        print("تم إعادة السماء إلى اللون الأزرق!")
+    else
+        -- تغيير السماء إلى اللون الأحمر
+        game.Lighting.Sky.SkyboxBk = "rbxassetid://132243523"
+        game.Lighting.Sky.SkyboxDn = "rbxassetid://132243523"
+        game.Lighting.Sky.SkyboxFt = "rbxassetid://132243523"
+        game.Lighting.Sky.SkyboxLf = "rbxassetid://132243523"
+        game.Lighting.Sky.SkyboxRt = "rbxassetid://132243523"
+        game.Lighting.Sky.SkyboxUp = "rbxassetid://132243523"
+        skyChanged = true
+        print("تم تغيير السماء إلى اللون الأحمر!")
+    end
+end
+
+-- واجهة المستخدم لطلب كلمة المرور
+local function createPasswordGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player.PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.3, 0, 0.2, 0)
+    frame.Position = UDim2.new(0.35, 0, 0.4, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    frame.Parent = screenGui
+
+    local passwordLabel = Instance.new("TextLabel")
+    passwordLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    passwordLabel.Position = UDim2.new(0, 0, 0, 0)
+    passwordLabel.Text = "أدخل كلمة المرور"
+    passwordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    passwordLabel.TextSize = 18
+    passwordLabel.BackgroundTransparency = 1
+    passwordLabel.Parent = frame
+
+    local passwordBox = Instance.new("TextBox")
+    passwordBox.Size = UDim2.new(0.8, 0, 0.2, 0)
+    passwordBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+    passwordBox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    passwordBox.ClearTextOnFocus = true
+    passwordBox.TextSize = 18
+    passwordBox.Parent = frame
+
+    local submitButton = Instance.new("TextButton")
+    submitButton.Size = UDim2.new(0.8, 0, 0.2, 0)
+    submitButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+    submitButton.Text = "فتح المكان"
+    submitButton.TextSize = 18
+    submitButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    submitButton.Parent = frame
+
+    -- إذا تم إدخال كلمة المرور الصحيحة
+    submitButton.MouseButton1Click:Connect(function()
+        if passwordBox.Text == correctPassword then
+            passwordEntered = true
+            screenGui:Destroy()
+            print("تم فتح المكان بنجاح!")
+        else
+            passwordBox.Text = "" -- إعادة النص إلى فارغ إذا كانت كلمة المرور خاطئة
+            print("كلمة المرور خاطئة، حاول مجددًا!")
+        end
+    end)
+end
+
+-- استدعاء الواجهة عند البداية
+createPasswordGUI()
+
+-- أحداث المفاتيح لتفعيل الوظائف
+mouse.KeyDown:Connect(function(key)
+    if not passwordEntered then return end -- إذا لم يتم إدخال كلمة المرور الصحيحة، لا تفعّل السكربت
+
+    -- تفعيل الطيران عند الضغط على "Q"
+    if key:lower() == "q" then
+        if flying then
+            stopFlying()
+            disableInfiniteJump()  -- إيقاف النط اللانهائي عند إيقاف الطيران
+        else
+            startFlying()
+            enableInfiniteJump()  -- تفعيل النط اللانهائي عند تفعيل الطيران
+        end
+    end
+
+    -- تفعيل زيادة السرعة عند الضغط على "E"
+    if key:lower() == "e" then
+        enableSpeedBoost()
+    end
+
+    -- تفعيل أو إيقاف عبور الجدران عند الضغط على "R"
+    if key:lower() == "r" then
+        bypassWalls = not bypassWalls  -- عكس الحالة (إذا كانت فعالة تصبح غير فعالة والعكس)
+        bypassWallsFunction()
+        if bypassWalls then
+            print("تم تفعيل عبور الجدران!")
+        else
+            print("تم إيقاف عبور الجدران!")
+        end
+    end
+
+    -- نسخ الجوال أو البيسي عند الضغط على "C"
+    if key:lower() == "c" then
+        -- تحديد الكائن الذي سيتم نسخه (الجوال أو البيسي)
+        local targetObject = mouse.Target
+        if targetObject then
+            -- تحقق مما إذا كان الكائن هو الجوال أو البيسي
+            if targetObject.Name == "Phone" or targetObject.Name == "PC" then
+                copyObject(targetObject)
+            end
+        end
+    end
+
+    -- تفعيل أو إيقاف الاختفاء عند الضغط على "X"
+    if key:lower() == "x" then
+        toggleInvisibility()
+    end
+
+    -- تغيير لون السماء إلى الأحمر عند الضغط على "V"
+    if key:lower() == "v" then
+        toggleSkyColor()
+    end
+end)
+
+-- إعادة السرعة إلى العادية عند رفع الأصبع عن المفتاح "E"
+mouse.KeyUp:Connect(function(key)
+    if key:lower() == "e" then
+        disableSpeedBoost()
+    end
+end)
+
+-- تحديث الجسم ليبقى في الهواء أثناء الطيران
+game:GetService("RunService").Heartbeat:Connect(function()
+    if flying then
+        bodyVelocity.Velocity = (mouse.Hit.p - character.HumanoidRootPart.Position).unit * speed
+        bodyGyro.CFrame = CFrame.new(character.HumanoidRootPart.Position, mouse.Hit.p)
+    end
+end)
+
